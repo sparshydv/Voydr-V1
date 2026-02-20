@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Voydr",
+  "description": "Lightweight digital performance coach that tracks browsing time.",
+  "version": "1.0.0",
+  "permissions": ["tabs", "storage", "notifications"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Voydr"
+  }
+}
