@@ -1,5 +1,7 @@
 console.log("Voydr background loaded");
 
+const REMINDER_THRESHOLD = 120;
+
 let activeHostname = null;
 let lastTimestamp = null;
 let isWindowFocused = true;
@@ -13,6 +15,80 @@ function extractHostname(url) {
 		return new URL(url).hostname;
 	} catch {
 		return null;
+	}
+}
+
+function getTodayDate() {
+	const now = new Date();
+	return now.toISOString().split("T")[0];
+}
+
+async function checkReminder(hostname, totalSeconds) {
+	if (totalSeconds < REMINDER_THRESHOLD) {
+		return;
+	}
+
+	try {
+		const today = getTodayDate();
+		const { remindersSent: storedRemindersSent } = await chrome.storage.local.get(["remindersSent"]);
+		const remindersSent =
+			storedRemindersSent && typeof storedRemindersSent === "object" && !Array.isArray(storedRemindersSent)
+				? storedRemindersSent
+				: {};
+
+		if (!remindersSent[today] || typeof remindersSent[today] !== "object" || Array.isArray(remindersSent[today])) {
+			remindersSent[today] = {};
+		}
+
+		if (remindersSent[today][hostname]) {
+			return;
+		}
+
+		chrome.notifications.create(
+			{
+				type: "basic",
+				iconUrl: chrome.runtime.getURL("icons/icon48.png"),
+				title: "Voydr Reminder",
+				message: `You've spent 2 minutes on ${hostname}. Stay intentional.`,
+			},
+			(notificationId) => {
+				if (chrome.runtime.lastError) {
+					console.error("Notification Error:", chrome.runtime.lastError);
+				} else {
+					console.log("Notification Created:", notificationId);
+				}
+			}
+		);
+
+		remindersSent[today][hostname] = true;
+		await chrome.storage.local.set({ remindersSent });
+		console.log("[REMINDER SENT]", hostname);
+	} catch (error) {
+		console.error("[Reminder Error]", error);
+	}
+}
+
+async function saveTime(hostname, secondsToAdd) {
+	try {
+		const { screenTime: storedScreenTime } = await chrome.storage.local.get(["screenTime"]);
+		const screenTime = storedScreenTime || {};
+		const today = getTodayDate();
+
+		if (!screenTime[today]) {
+			screenTime[today] = {};
+		}
+
+		if (!screenTime[today][hostname]) {
+			screenTime[today][hostname] = 0;
+		}
+
+		screenTime[today][hostname] += secondsToAdd;
+		const updatedTotalForToday = screenTime[today][hostname];
+		await chrome.storage.local.set({ screenTime });
+		await checkReminder(hostname, updatedTotalForToday);
+		console.log(`[SAVED] ${hostname} total updated`);
+	} catch (error) {
+		console.error("[Save Error]", error);
 	}
 }
 
@@ -33,8 +109,8 @@ function trackTime() {
 		deltaSeconds = 300;
 	}
 
-	console.log(`[TRACKED] ${activeHostname} +${deltaSeconds}s`);
 	lastTimestamp = now;
+	void saveTime(activeHostname, deltaSeconds);
 }
 
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
