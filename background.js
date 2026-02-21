@@ -7,12 +7,23 @@ let lastTimestamp = null;
 let isWindowFocused = true;
 
 function extractHostname(url) {
-	if (!url || url.startsWith("chrome://") || url.startsWith("edge://")) {
-		return null;
-	}
-
 	try {
-		return new URL(url).hostname;
+		if (
+			!url ||
+			url.startsWith("chrome://") ||
+			url.startsWith("edge://") ||
+			url.startsWith("about:") ||
+			url.startsWith("devtools://")
+		) {
+			return null;
+		}
+
+		const hostname = new URL(url).hostname;
+		if (!hostname || hostname === "localhost" || hostname === "127.0.0.1") {
+			return null;
+		}
+
+		return hostname;
 	} catch {
 		return null;
 	}
