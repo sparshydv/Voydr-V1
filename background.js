@@ -1,6 +1,6 @@
 console.log("Voydr background loaded");
 
-const REMINDER_THRESHOLD = 120;
+const REMINDER_THRESHOLD = 30;
 
 let activeHostname = null;
 let lastTimestamp = null;
@@ -49,20 +49,20 @@ async function checkReminder(hostname, totalSeconds) {
 				type: "basic",
 				iconUrl: chrome.runtime.getURL("icons/icon48.png"),
 				title: "Voydr Reminder",
-				message: `You've spent 2 minutes on ${hostname}. Stay intentional.`,
+				message: `You've quota for using ${hostname} for today is over. Stay intentional.`,
+				priority: 2,
 			},
 			(notificationId) => {
 				if (chrome.runtime.lastError) {
 					console.error("Notification Error:", chrome.runtime.lastError);
 				} else {
-					console.log("Notification Created:", notificationId);
+					console.log("[REMINDER SENT]", hostname);
 				}
 			}
 		);
 
 		remindersSent[today][hostname] = true;
 		await chrome.storage.local.set({ remindersSent });
-		console.log("[REMINDER SENT]", hostname);
 	} catch (error) {
 		console.error("[Reminder Error]", error);
 	}
