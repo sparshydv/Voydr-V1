@@ -17,6 +17,25 @@ function getTodayDate() {
 	return now.toISOString().split("T")[0];
 }
 
+function cleanInputHostname(input) {
+	let urlString = input.trim().toLowerCase();
+	if (!urlString) return "";
+
+	if (!urlString.includes("://")) {
+		urlString = "https://" + urlString;
+	}
+
+	try {
+		let hostname = new URL(urlString).hostname;
+		if (hostname.startsWith("www.")) {
+			hostname = hostname.substring(4);
+		}
+		return hostname;
+	} catch {
+		return urlString.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
+	}
+}
+
 function formatDuration(totalSeconds) {
 	if (totalSeconds < 60) {
 		return `${totalSeconds}s`;
@@ -69,13 +88,15 @@ document.addEventListener("DOMContentLoaded", () => {
 		return;
 	}
 
-	chrome.storage.local.get(["screenTime", "siteCategory"], ({ screenTime, siteCategory: storedSiteCategory }) => {
+	chrome.storage.local.get(["screenTime", "siteCategory", "blockedSites"], ({ screenTime, siteCategory: storedSiteCategory, blockedSites: storedBlockedSites }) => {
 		const today = getTodayDate();
 		const todayData = screenTime?.[today];
 		const siteCategory =
 			storedSiteCategory && typeof storedSiteCategory === "object" && !Array.isArray(storedSiteCategory)
 				? storedSiteCategory
 				: {};
+		
+		const blockedSitesToday = storedBlockedSites?.[today] || [];
 
 		const entries =
 			todayData && typeof todayData === "object"
@@ -178,7 +199,61 @@ document.addEventListener("DOMContentLoaded", () => {
 				sitesSection.appendChild(list);
 			}
 
-			appElement.append(focusSection, totalSection, sitesSection);
+			const blockSection = document.createElement("section");
+			const blockHeading = document.createElement("h2");
+			blockHeading.textContent = "Hard Block Today";
+
+			const blockInputGroup = document.createElement("div");
+			blockInputGroup.className = "block-input-group";
+			const blockInput = document.createElement("input");
+			blockInput.className = "block-input";
+			blockInput.placeholder = "e.g. youtube.com";
+			const blockBtn = document.createElement("button");
+			blockBtn.className = "block-btn";
+			blockBtn.textContent = "Block";
+
+			blockBtn.addEventListener("click", () => {
+				const rawInput = blockInput.value;
+				const hostnameToBlock = cleanInputHostname(rawInput);
+				if (!hostnameToBlock) return;
+
+				if (!blockedSitesToday.includes(hostnameToBlock)) {
+					blockedSitesToday.push(hostnameToBlock);
+					const updatedBlockedSites = {
+						...(storedBlockedSites || {}),
+						[today]: blockedSitesToday
+					};
+					chrome.storage.local.set({ blockedSites: updatedBlockedSites }, () => {
+						blockInput.value = "";
+						// Reload the popup contents to reflect changes
+						window.location.reload();
+					});
+				}
+			});
+
+			blockInputGroup.append(blockInput, blockBtn);
+
+			const blockedList = document.createElement("ul");
+			blockedList.className = "blocked-sites-list";
+
+			if (blockedSitesToday.length === 0) {
+				const emptyBlockState = document.createElement("p");
+				emptyBlockState.textContent = "No sites blocked today.";
+				emptyBlockState.style.color = "#9ca3af";
+				emptyBlockState.style.fontSize = "0.85rem";
+				blockedList.appendChild(emptyBlockState);
+			} else {
+				blockedSitesToday.forEach((site) => {
+					const li = document.createElement("li");
+					li.className = "blocked-site-item";
+					li.textContent = cleanInputHostname(site);
+					blockedList.appendChild(li);
+				});
+			}
+
+			blockSection.append(blockHeading, blockInputGroup, blockedList);
+
+			appElement.append(focusSection, totalSection, sitesSection, blockSection);
 		};
 
 		renderDashboard();

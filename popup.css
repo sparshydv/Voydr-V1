@@ -130,3 +130,54 @@ h1 {
   color: #111827;
   font: inherit;
 }
+
+.block-input-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.block-input {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.block-btn {
+  padding: 6px 12px;
+  background: #111827;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.block-btn:hover {
+  background: #374151;
+}
+
+.blocked-sites-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.blocked-site-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.blocked-site-item::before {
+  content: "🚫";
+  margin-right: 6px;
+  font-size: 0.75rem;
+}

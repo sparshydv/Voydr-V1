@@ -124,9 +124,59 @@ function trackTime() {
 	void saveTime(activeHostname, deltaSeconds);
 }
 
+function cleanInputHostname(input) {
+	let urlString = input.trim().toLowerCase();
+	if (!urlString) return "";
+
+	if (!urlString.includes("://")) {
+		urlString = "https://" + urlString;
+	}
+
+	try {
+		let hostname = new URL(urlString).hostname;
+		if (hostname.startsWith("www.")) {
+			hostname = hostname.substring(4);
+		}
+		return hostname;
+	} catch {
+		return urlString.replace(/^(https?:\/\/)?(www\.)?/, "").split("/")[0];
+	}
+}
+
+async function checkBlock(tabId, url) {
+	if (!url) return false;
+	const hostname = extractHostname(url);
+	if (!hostname) return false;
+
+	try {
+		const { blockedSites } = await chrome.storage.local.get(["blockedSites"]);
+		const today = getTodayDate();
+		const todayBlocked = blockedSites?.[today] || [];
+		
+		const activeClean = cleanInputHostname(hostname);
+		const isBlocked = todayBlocked.some(blocked => {
+			const blockedClean = cleanInputHostname(blocked);
+			return activeClean === blockedClean || activeClean.endsWith("." + blockedClean);
+		});
+
+		if (isBlocked) {
+			const blockedUrl = chrome.runtime.getURL(`blocked.html?site=${hostname}`);
+			await chrome.tabs.update(tabId, { url: blockedUrl });
+			return true;
+		}
+	} catch (err) {
+		console.error("Block check error", err);
+	}
+	return false;
+}
+
 chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 	try {
 		const tab = await chrome.tabs.get(tabId);
+		
+		const isBlocked = await checkBlock(tabId, tab?.url);
+		if (isBlocked) return;
+
 		const hostname = extractHostname(tab?.url);
 		if (!hostname) {
 			return;
@@ -141,7 +191,12 @@ chrome.tabs.onActivated.addListener(async ({ tabId }) => {
 	}
 });
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+	if (changeInfo.url) {
+		const isBlocked = await checkBlock(tabId, changeInfo.url);
+		if (isBlocked) return;
+	}
+
 	if (changeInfo.status === "complete" && tab?.active === true) {
 		const hostname = extractHostname(tab?.url);
 		if (!hostname) {
