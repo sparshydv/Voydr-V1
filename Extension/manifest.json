@@ -3,8 +3,15 @@
   "name": "Voydr",
   "description": "Lightweight digital performance coach that tracks browsing time.",
   "version": "1.0.0",
-  "permissions": ["tabs", "storage", "notifications"],
-  "host_permissions": ["<all_urls>"],
+  "permissions": [
+    "tabs",
+    "storage",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },

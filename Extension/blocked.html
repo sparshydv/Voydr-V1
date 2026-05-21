@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Mode Active</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #000000;
+      --text-main: #f4f4f5;
+      --text-muted: #71717a;
+      --accent-coral: #D97B66;
+      --accent-blue: #5B6CFF;
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Cinematic Breathing Orb */
+    .orb-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .orb {
+      width: 60vh;
+      height: 60vh;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--accent-blue) 0%, transparent 60%);
+      opacity: 0.08;
+      filter: blur(60px);
+      animation: breathe 8s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); opacity: 0.05; }
+      50% { transform: scale(1.2); opacity: 0.12; }
+    }
+
+    .content-wrapper {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 600px;
+      padding: 40px;
+      animation: fadeIn 1.5s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(10px); }
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: var(--accent-coral);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-badge::before, .status-badge::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--accent-coral);
+      opacity: 0.3;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .hostname {
+      color: var(--accent-coral);
+      font-weight: 500;
+    }
+
+    .quote-box {
+      margin: 32px 0 48px;
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: #a1a1aa;
+      font-style: italic;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 20px 32px;
+      border-radius: 16px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    button {
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.01em;
+    }
+
+    .btn-primary {
+      background: var(--text-main);
+      color: var(--bg-color);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-bg);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .brand {
+      position: absolute;
+      bottom: 32px;
+      left: 50%;
+      transform: translate(-50%, 0);
+      font-size: 11px;
+      font-weight: 500;
+      color: #52525b;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInBrand 2s ease-out 1s forwards;
+    }
+
+    @keyframes fadeInBrand {
+      from { opacity: 0; transform: translate(-50%, 10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb-container">
+    <div class="orb"></div>
+  </div>
+
+  <div class="content-wrapper">
+    <div class="status-badge" id="status-badge">Intentional Block</div>
+    
+    <h1>It's time to focus. <br/> <span class="hostname" id="blocked-site">This site</span> is paused.</h1>
+    
+    <div class="quote-box" id="quote-box">
+      "Where your attention goes, your time goes."
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value" id="total-time">--h --m</div>
+        <div class="stat-label">Total Time Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">Midnight</div>
+        <div class="stat-label">Unlock Time</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-primary" id="btn-dashboard">Open Dashboard</button>
+      <button class="btn-secondary" id="btn-continue">Try Again</button>
+    </div>
+  </div>
+
+  <div class="brand">Voydr Performance Coach</div>
+
+  <script src="blocked.js"></script>
+</body>
+</html>
